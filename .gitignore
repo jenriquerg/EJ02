@@ -1,0 +1,7 @@
+node_modules
+
+all.log
+combined.log
+error.log
+
+serviceAccountKey.json
