@@ -16,7 +16,7 @@ const limiter = rateLimit({
 
 router.use(limiter);
 
-router.get("/getInfo", (req, res) => {
+router.get("/getInfo", limiter, (req, res) => {
   const alumnoInfo = {
     nombre: "Juan Pérez",
     grupo: "IDGS12",
@@ -27,7 +27,7 @@ router.get("/getInfo", (req, res) => {
   });
 });
 
-router.post("/register", async (req, res) => {
+router.post("/register", limiter, async (req, res) => {
   const { email, username, password, grado, grupo } = req.body;
 
   if (!email || !username || !password || !grado || !grupo) {
@@ -117,7 +117,7 @@ router.post("/login", limiter, async (req, res) => {
   }
 });
 
-router.post("/verify-otp", async (req, res) => {
+router.post("/verify-otp", limiter, async (req, res) => {
   const { email, token } = req.body;
 
   if (!email || !token) {
@@ -155,5 +155,57 @@ router.post("/verify-otp", async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 });
+
+router.get("/logs", limiter, async (req, res) => {
+  try {
+    const logsRef = db.collection("logs");
+    const snapshot = await logsRef.get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ message: "No se encontraron logs de nivel info" });
+    }
+
+    const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return res.json(logs);
+  } catch (error) {
+    console.error("Error al obtener logs de nivel info:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+router.get("/logs-error", async (req, res) => {
+  try {
+    const logsRef = db.collection("logs");
+    const snapshot = await logsRef.where("logLevel", "==", "error").get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ message: "No se encontraron logs de nivel info" });
+    }
+
+    const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return res.json(logs);
+  } catch (error) {
+    console.error("Error al obtener logs de nivel info:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+router.get("/logs-warning", async (req, res) => {
+  try {
+    const logsRef = db.collection("logs");
+    const snapshot = await logsRef.where("logLevel", "==", "warning").get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ message: "No se encontraron logs de nivel info" });
+    }
+
+    const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return res.json(logs);
+  } catch (error) {
+    console.error("Error al obtener logs de nivel info:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 
 module.exports = router;
