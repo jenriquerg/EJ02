@@ -5,3 +5,5 @@ combined.log
 error.log
 
 serviceAccountKey.json
+
+.env
