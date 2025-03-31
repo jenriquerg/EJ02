@@ -18,8 +18,8 @@ router.use(limiter);
 
 router.get("/getInfo", limiter, (req, res) => {
   const alumnoInfo = {
-    nombre: "Juan Pérez",
-    grupo: "IDGS12",
+    nombre: "Jesus Enrique Rojas Guerrero",
+    grupo: "IDGS11",
   };
   res.json({
     nodeVersion: process.version,
