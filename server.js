@@ -7,20 +7,13 @@ require('dotenv').config();
 
 const port = process.env.PORT || 5001;
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
-serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+// Cargar la configuración desde las variables de entorno
+let serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 
+// Inicializar Firebase
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
-// Inicializar Firebase Admin SDK
-if (!admin.apps.length) {
-  admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-  });
-} else {
-  admin.app();
-}
 
 // Importar rutas después de la conexión a Firebase para evitar fallos
 const routes = require("./routes");
