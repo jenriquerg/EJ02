@@ -16,6 +16,26 @@ const limiter = rateLimit({
 
 router.use(limiter);
 
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Acceso no autorizado, token requerido" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: "Token inválido o expirado" });
+    }
+    
+    req.user = decoded;
+    next();
+  });
+};
+
+
 router.get("/getInfo", limiter, (req, res) => {
   const alumnoInfo = {
     nombre: "Jesus Enrique Rojas Guerrero",
@@ -107,7 +127,7 @@ router.post("/login", limiter, async (req, res) => {
     const jwtToken = jwt.sign(
       { email: userData.email, grado: userData.grado, username: userData.username, grupo: userData.grupo },
       process.env.JWT_SECRET || "aguacate",
-      { expiresIn: "2h" }
+      { expiresIn: "1h" }
     );
 
     res.json({ success: true, token: jwtToken });
@@ -146,7 +166,7 @@ router.post("/verify-otp", limiter, async (req, res) => {
     const jwtToken = jwt.sign(
       {  email: user.email, grado: user.grado, username: user.username, grupo: user.grupo },
       process.env.JWT_SECRET || "aguacate",
-      { expiresIn: "2h" }
+      { expiresIn: "1h" }
     );
 
     res.json({ success: true, token: jwtToken });
@@ -156,7 +176,7 @@ router.post("/verify-otp", limiter, async (req, res) => {
   }
 });
 
-router.get("/logs", limiter, async (req, res) => {
+router.get("/logs", verifyToken, limiter, async (req, res) => {
   try {
     const logsRef = db.collection("logs");
     const snapshot = await logsRef.get();
@@ -173,7 +193,7 @@ router.get("/logs", limiter, async (req, res) => {
   }
 });
 
-router.get("/logs-error", async (req, res) => {
+router.get("/logs-error", verifyToken, limiter, async (req, res) => {
   try {
     const logsRef = db.collection("logs");
     const snapshot = await logsRef.where("logLevel", "==", "error").get();
@@ -190,7 +210,7 @@ router.get("/logs-error", async (req, res) => {
   }
 });
 
-router.get("/logs-warning", async (req, res) => {
+router.get("/logs-warning", verifyToken, limiter, async (req, res) => {
   try {
     const logsRef = db.collection("logs");
     const snapshot = await logsRef.where("logLevel", "==", "warning").get();
